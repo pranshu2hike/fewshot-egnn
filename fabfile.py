@@ -7,7 +7,7 @@ global sudo
 
 env.user = os.getenv("DEPLOY_USER")
 env.root_dir = "/opt/local/share"
-env.app_directory = "/mnt3/pranshu/few_shot"
+env.app_directory = "/mnt3/pranshu/few_shot/"
 local_dir = "*"
 remote_dir = "/mnt3/pranshu/few_shot/fewshot-egnn"
 exclude = ["*~", "*.pyc"]
