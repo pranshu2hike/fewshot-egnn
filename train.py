@@ -1,5 +1,5 @@
 from torchtools import *
-from data import MiniImagenetLoader, TieredImagenetLoader
+from data import MiniImagenetLoader, TieredImagenetLoader, TieredImagenetLoaderCustom
 from model import EmbeddingImagenet, GraphNetwork, ConvNet
 import shutil
 import os
@@ -18,21 +18,27 @@ class ModelTrainer(object):
 
         if tt.arg.num_gpus > 1:
             print('Construct multi-gpu model ...')
-            self.enc_module = nn.DataParallel(self.enc_module, device_ids=[0, 1, 2, 3], dim=0)
+            self.enc_module = nn.DataParallel(self.enc_module, device_ids=[0, 1 ,2, 3], dim=0)
             self.gnn_module = nn.DataParallel(self.gnn_module, device_ids=[0, 1, 2, 3], dim=0)
 
             print('done!\n')
 
         # get data loader
+        print('Loading Data!\n')
         self.data_loader = data_loader
+        print('Loading Data Done!\n')
 
         # set optimizer
+        print('Loading params!\n')
         self.module_params = list(self.enc_module.parameters()) + list(self.gnn_module.parameters())
+        print('Loading params Done!\n')
 
         # set optimizer
+        print('Loading optimizer!\n')
         self.optimizer = optim.Adam(params=self.module_params,
                                     lr=tt.arg.lr,
                                     weight_decay=tt.arg.weight_decay)
+        print('Loading optimizer Done! \n')
 
         # set loss
         self.edge_loss = nn.BCELoss(reduction='none')
@@ -44,6 +50,7 @@ class ModelTrainer(object):
         self.test_acc = 0
 
     def train(self):
+        print('IN TRAIN! \n')
         val_acc = self.val_acc
 
         # set edge mask (to distinguish support and query edges)
@@ -388,10 +395,10 @@ if __name__ == '__main__':
     tt.arg.num_shots = 1 if tt.arg.num_shots is None else tt.arg.num_shots
     tt.arg.num_unlabeled = 0 if tt.arg.num_unlabeled is None else tt.arg.num_unlabeled
     tt.arg.num_layers = 3 if tt.arg.num_layers is None else tt.arg.num_layers
-    tt.arg.meta_batch_size = 40 if tt.arg.meta_batch_size is None else tt.arg.meta_batch_size
+    tt.arg.meta_batch_size = 10 if tt.arg.meta_batch_size is None else tt.arg.meta_batch_size
     tt.arg.transductive = False if tt.arg.transductive is None else tt.arg.transductive
     tt.arg.seed = 222 if tt.arg.seed is None else tt.arg.seed
-    tt.arg.num_gpus = 1 if tt.arg.num_gpus is None else tt.arg.num_gpus
+    tt.arg.num_gpus = 3 if tt.arg.num_gpus is None else tt.arg.num_gpus
 
     tt.arg.num_ways_train = tt.arg.num_ways
     tt.arg.num_ways_test = tt.arg.num_ways
@@ -453,8 +460,8 @@ if __name__ == '__main__':
         train_loader = MiniImagenetLoader(root=tt.arg.dataset_root, partition='train')
         valid_loader = MiniImagenetLoader(root=tt.arg.dataset_root, partition='val')
     elif tt.arg.dataset == 'tiered':
-        train_loader = TieredImagenetLoader(root=tt.arg.dataset_root, partition='train')
-        valid_loader = TieredImagenetLoader(root=tt.arg.dataset_root, partition='val')
+        train_loader = TieredImagenetLoaderCustom(root=tt.arg.dataset_root, partition='train')
+        valid_loader = TieredImagenetLoaderCustom(root=tt.arg.dataset_root, partition='val')
     else:
         print('Unknown dataset!')
 
